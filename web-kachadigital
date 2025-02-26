@@ -1,0 +1,445 @@
+"use client";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+// Animaciones existentes
+const scanEffect = {
+  initial: { scaleX: 0 },
+  animate: {
+    scaleX: [0, 1, 0],
+    transition: {
+      duration: 7,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const bottomScanner = {
+  initial: { x: "-100%" },
+  animate: {
+    x: ["-100%", "100%"],
+    transition: {
+      duration: 30,
+      repeat: Infinity,
+      ease: "easeInOut",
+      repeatType: "reverse",
+    },
+  },
+};
+
+// Datos de servicios
+const servicesList = [
+  {
+    title: "Desarrollo Web",
+    description:
+      "Creamos sitios web personalizados y optimizados para mejorar la presencia digital de tu negocio.",
+    color: "bg-blue-700",
+  },
+  {
+    title: "Desarrollo de Aplicaciones",
+    description:
+      "Diseñamos y construimos aplicaciones móviles innovadoras para iOS y Android.",
+    color: "bg-green-700",
+  },
+  {
+    title: "Marketing Digital",
+    description:
+      "Implementamos estrategias efectivas para aumentar la visibilidad y engagement en redes sociales.",
+    color: "bg-purple-700",
+  },
+  {
+    title: "Diseño UI/UX",
+    description:
+      "Creamos experiencias de usuario intuitivas con diseño atractivo y funcional.",
+    color: "bg-yellow-600",
+  },
+  {
+    title: "Consultoría Tecnológica",
+    description:
+      "Asesoramos en la transformación digital y optimización de procesos tecnológicos.",
+    color: "bg-red-700",
+  },
+];
+
+// Datos de proyectos
+const projectsList = [
+  {
+    title: "Mihelpo",
+    description:
+      "Plataforma de asistencia remota que permite conectar expertos con clientes en tiempo real.",
+    color: "bg-teal-700",
+  },
+  {
+    title: "KachaGestión",
+    description:
+      "Sistema de gestión empresarial diseñado para optimizar procesos administrativos y operativos.",
+    color: "bg-indigo-700",
+  },
+];
+
+// Sistema de “respuestas” simple
+function getBotResponse(userMessage) {
+  const lowerMsg = userMessage.toLowerCase();
+
+  if (lowerMsg.includes("hola")) {
+    return "¡Hola! ¿En qué puedo ayudarte?";
+  } else if (lowerMsg.includes("servicio")) {
+    return "Ofrecemos servicios de Desarrollo Web, Aplicaciones, Marketing Digital, Diseño UI/UX y Consultoría.";
+  } else if (lowerMsg.includes("proyecto")) {
+    return "Nuestros proyectos más destacados son Mihelpo y KachaGestión.";
+  } else if (lowerMsg.includes("gracias")) {
+    return "¡Con gusto! ¿Puedo ayudarte en algo más?";
+  } else {
+    return "Lo siento, aún estoy aprendiendo. Intenta preguntar algo sobre servicios o proyectos.";
+  }
+}
+
+// -----------------------------
+// CHATBOT ACTUALIZADO
+// -----------------------------
+const Chatbot = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      text: "Hola, soy el Chatbot de Kacha Digital. Pregúntame sobre nuestros servicios o proyectos.",
+      sender: "bot",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [botIsTyping, setBotIsTyping] = useState(false);
+
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, botIsTyping]);
+
+  const handleSendMessage = () => {
+    if (input.trim() === "") return;
+
+    // Mensaje del usuario
+    const userMsg = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMsg]);
+
+    // Simular escritura del bot
+    setBotIsTyping(true);
+
+    // Simulamos un retraso para la respuesta del bot
+    setTimeout(() => {
+      const botMsg = { text: getBotResponse(input), sender: "bot" };
+      setMessages((prev) => [...prev, botMsg]);
+      setBotIsTyping(false);
+    }, 1200);
+
+    setInput("");
+  };
+
+  return (
+    <div className="fixed bottom-4 right-4 flex flex-col items-end z-50">
+      {/* Animamos la aparición/desaparición del contenedor del chat */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="chatWindow"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            transition={{ duration: 0.3 }}
+            className="bg-gray-900 text-white p-4 rounded-lg shadow-xl w-80 max-h-[400px] flex flex-col"
+          >
+            {/* Encabezado Chatbot */}
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-bold">KachaBot</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Área de mensajes */}
+            <div className="flex-1 overflow-y-auto mb-2 space-y-2">
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`
+                    max-w-[70%] px-3 py-2 text-sm rounded-xl relative
+                    ${msg.sender === "bot" ? 
+                      "bg-gray-700 self-start" : 
+                      "bg-blue-600 self-end"
+                    }
+                  `}
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
+                  {msg.text}
+                  {msg.sender === "bot" && (
+                    <span className="absolute -left-3 top-2 w-0 h-0 border-y-8 border-y-transparent border-r-[12px] border-r-gray-700" />
+                  )}
+                  {msg.sender === "user" && (
+                    <span className="absolute -right-3 top-2 w-0 h-0 border-y-8 border-y-transparent border-l-[12px] border-l-blue-600" />
+                  )}
+                </div>
+              ))}
+
+              {/* Indicador "bot está escribiendo..." */}
+              {botIsTyping && (
+                <div className="max-w-[70%] px-3 py-2 text-sm rounded-xl bg-gray-700 self-start animate-pulse">
+                  KachaBot está escribiendo...
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Input + botón Enviar */}
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-grow p-2 rounded-l-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Escribe tu mensaje..."
+              />
+              <button
+                onClick={handleSendMessage}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-lg"
+              >
+                <svg
+                  className="w-5 h-5 transform rotate-45"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 10l11 11M3 10l11-11m0 0v22" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Botón flotante para abrir el Chat */}
+      {!isOpen && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsOpen(true)}
+          className="bg-blue-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-800"
+          style={{
+            animation: "pulseBot 2s infinite"
+          }}
+        >
+          🤖
+        </motion.button>
+      )}
+    </div>
+  );
+};
+
+// -----------------------------
+// COMPONENTE PRINCIPAL
+// -----------------------------
+const HomePage = () => {
+  const [activeSection, setActiveSection] = useState(null);
+
+  const handleMenuHover = (section) => {
+    // Si prefieres abrir la sección al hacer click en lugar de hover, 
+    // reemplaza estos eventos por onClick 
+    setActiveSection(section);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col justify-between bg-black text-gray-300 relative">
+      {/* Efecto escáner horizontal en la parte inferior */}
+      <motion.div
+        className="fixed bottom-0 left-0 h-2 bg-white w-full opacity-70"
+        variants={bottomScanner}
+        initial="initial"
+        animate="animate"
+      />
+
+      {/* Encabezado */}
+      <header className="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-500 text-white py-6 shadow-lg sticky top-0 z-50 relative">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          {/* Título con efecto de escaneo */}
+          <motion.h1 className="text-4xl font-extrabold relative">
+            KACHA DIGITAL
+            <motion.div
+              className="absolute left-0 bottom-[-5px] h-1 bg-white w-full"
+              variants={scanEffect}
+              initial="initial"
+              animate="animate"
+            />
+          </motion.h1>
+
+          {/* Menú */}
+          <nav>
+            <ul className="flex space-x-4">
+              <li
+                onMouseEnter={() => handleMenuHover("Servicios")}
+                onMouseLeave={() => setActiveSection(null)}
+                className="cursor-pointer"
+              >
+                Servicios
+              </li>
+              <li
+                onMouseEnter={() => handleMenuHover("Proyectos")}
+                onMouseLeave={() => setActiveSection(null)}
+                className="cursor-pointer"
+              >
+                Proyectos
+              </li>
+              <li
+                onMouseEnter={() => handleMenuHover("Contacto")}
+                onMouseLeave={() => setActiveSection(null)}
+                className="cursor-pointer"
+              >
+                Contacto
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+      {/* Tres rectángulos giratorios */}
+      <div
+        className="flex justify-center items-center py-10 gap-8"
+        style={{ perspective: "1000px" }}
+      >
+        <motion.div
+          className="w-48 h-24 bg-gray-700 rounded-lg flex items-center justify-center text-2xl font-bold text-white border-4 border-white"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={{ rotateY: 360 }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        >
+          VISION 
+        </motion.div>
+        <motion.div
+          className="w-48 h-24 bg-gray-800 rounded-lg flex items-center justify-center text-2xl font-bold text-white border-4 border-white"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={{ rotateX: 360 }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        >
+          CONSTANCIA
+        </motion.div>
+         <motion.div
+          className="w-48 h-24 bg-gray-700 rounded-lg flex items-center justify-center text-2xl font-bold text-white border-4 border-white"
+          style={{ transformStyle: "preserve-3d" }}
+          animate={{ rotateY: 360 }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+        >
+          FUTURO
+        </motion.div>
+         </div>
+
+      {/* Contenido principal */}
+      <main className="container mx-auto px-4 py-10">
+        {/* Sección de Servicios */}
+        {activeSection === "Servicios" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {servicesList.map((service, index) => (
+              <div
+                key={index}
+                className={`p-4 shadow-lg rounded-lg hover:shadow-xl transition-shadow ${service.color}`}
+              >
+                <h4 className="text-lg font-bold text-center text-white">
+                  {service.title}
+                </h4>
+                <p className="text-center mt-2 text-white text-sm">
+                  {service.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Sección de Proyectos */}
+        {activeSection === "Proyectos" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {projectsList.map((project, index) => (
+              <div
+                key={index}
+                className={`p-4 shadow-lg rounded-lg hover:shadow-xl transition-shadow ${project.color}`}
+              >
+                <h4 className="text-lg font-bold text-center text-white">
+                  {project.title}
+                </h4>
+                <p className="text-center mt-2 text-white text-sm">
+                  {project.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Sección de Contacto */}
+        {activeSection === "Contacto" && (
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-md max-w-lg mx-auto">
+            <h3 className="text-3xl font-bold text-center mb-6">Contáctanos</h3>
+            <form onSubmit={(e) => e.preventDefault()}>
+              <div className="mb-4">
+                <label className="block text-sm font-bold mb-2" htmlFor="name">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  className="w-full p-2 rounded-lg text-black"
+                  placeholder="Tu nombre"
+                  required
+                />
+              
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-bold mb-2" htmlFor="message">
+                  Mensaje
+                </label>
+                <textarea
+                  id="message"
+                  rows="4"
+                  className="w-full p-2 rounded-lg text-black"
+                  placeholder="Tu mensaje"
+                  required
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                className="bg-blue-600 w-full py-2 rounded-lg text-white hover:bg-blue-700 transition-colors"
+              >
+                Enviar
+              </button>
+            </form>
+          </div>
+        )}
+      </main>
+
+      {/* Pie de página */}
+      <footer className="bg-blue-800 text-white py-6 text-center">
+        <p>&copy; 2025 Kacha Digital. Todos los derechos reservados.</p>
+        <p>
+          <a href="#" className="underline">
+            Política de Privacidad
+          </a>{" "}
+          |{" "}
+          <a href="#" className="underline ml-2">
+            Términos y Condiciones
+          </a>
+        </p>
+      </footer>
+
+      {/* Chatbot actualizado */}
+      <Chatbot />
+    </div>
+  );
+};
+
+export default HomePage;
+
+
+
